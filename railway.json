@@ -4,7 +4,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "python src/scheduler.py",
+    "startCommand": "gunicorn src.app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 30",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 5
   }
