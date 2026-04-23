@@ -1,0 +1,10 @@
+# SAT El Tarra – Dependencias Python
+# Instalar con: pip install -r requirements.txt
+# Todas las librerías son código abierto y gratuitas
+
+flask==3.1.1
+feedparser==6.0.11
+requests==2.32.3
+beautifulsoup4==4.12.3
+lxml==5.4.0
+gunicorn==23.0.0

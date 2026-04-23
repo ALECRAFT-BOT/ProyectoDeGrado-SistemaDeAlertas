@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="description" content="SAT El Tarra – Sistema de Alerta Temprana de Movilidad y Seguridad Vial en el municipio de El Tarra, Norte de Santander." />
+  <meta name="theme-color" content="#0a1628" />
+  <title>SAT El Tarra – Alertas</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════ CABECERA ═══ -->
+<header class="cabecera">
+  <div class="cab-inner">
+    <div class="cab-logo">
+      <span class="cab-escudo">🛡️</span>
+      <div>
+        <span class="cab-nombre">SAT El Tarra</span>
+        <span class="cab-subtitulo">Sistema de Alerta Temprana · Catatumbo</span>
+      </div>
+    </div>
+    <div class="cab-acciones">
+      <a href="/alertas" class="btn-actualizar" title="Actualizar alertas">
+        ↻ Actualizar
+      </a>
+    </div>
+  </div>
+
+  {% if modo == 'demo' %}
+  <div class="banner-demo">
+    ⚠ MODO DEMOSTRACIÓN – Los datos son simulados para pruebas académicas
+  </div>
+  {% endif %}
+
+  <div class="banner-conexion">
+    <span class="punto-verde"></span>
+    Modo Conexión Optimizada · Última actualización: <strong>{{ ultima_actualizacion }}</strong>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════ FILTROS ═══ -->
+<nav class="filtros-bar">
+  <div class="filtros-inner">
+    <a href="/alertas"
+       class="filtro-btn {% if not zona_filtro and not cat_filtro %}activo{% endif %}">
+      Todo
+    </a>
+    {% for zona in zonas %}
+    <a href="/alertas?zona={{ zona | urlencode }}"
+       class="filtro-btn {% if zona_filtro == zona %}activo{% endif %}">
+      {{ zona.replace('El Tarra – ', '') }}
+    </a>
+    {% endfor %}
+    <a href="/alertas?categoria=seguridad"
+       class="filtro-btn {% if cat_filtro == 'seguridad' %}activo{% endif %}">
+      🚔 Seguridad
+    </a>
+    <a href="/alertas?categoria=emergencia_ambiental"
+       class="filtro-btn {% if cat_filtro == 'emergencia_ambiental' %}activo{% endif %}">
+      🌊 Ambiental
+    </a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════ CONTENIDO ═══ -->
+<main class="contenedor">
+
+  <!-- Contador de alertas -->
+  <div class="contador-bar">
+    <span class="contador-num">{{ total }}</span>
+    <span class="contador-label">alerta{% if total != 1 %}s{% endif %} encontrada{% if total != 1 %}s{% endif %}</span>
+    {% if zona_filtro or cat_filtro %}
+    <a href="/alertas" class="limpiar-filtros">✕ Limpiar filtros</a>
+    {% endif %}
+  </div>
+
+  <!-- Leyenda de urgencia -->
+  <div class="leyenda">
+    <span class="leyenda-item"><span class="borde-rojo"></span>Alta urgencia</span>
+    <span class="leyenda-item"><span class="borde-naranja"></span>Urgencia media</span>
+    <span class="leyenda-item"><span class="borde-verde"></span>Ambiental</span>
+    <span class="leyenda-item"><span class="borde-azul"></span>Informativa</span>
+  </div>
+
+  <!-- Lista de alertas -->
+  {% if alertas %}
+  <ul class="lista-alertas">
+    {% for alerta in alertas %}
+    <li class="tarjeta-alerta borde-cat-{{ alerta.categoria }}">
+      <div class="tarj-header">
+        <span class="tarj-icono">{{ alerta.icono }}</span>
+        <h2 class="tarj-titulo">{{ alerta.titulo }}</h2>
+      </div>
+      <p class="tarj-desc">{{ alerta.descripcion }}</p>
+      <div class="tarj-meta">
+        <span class="tarj-fuente">{{ alerta.fuente }}</span>
+        <span class="tarj-sep">·</span>
+        <span class="tarj-zona zona-pill">{{ alerta.zona }}</span>
+        <span class="tarj-sep">·</span>
+        <span class="tarj-fecha">{{ alerta.fecha_formateada }}</span>
+        <span class="tarj-sep">·</span>
+        <span class="etiqueta etq-{{ alerta.categoria }}">{{ alerta.etiqueta_texto }}</span>
+      </div>
+      {% if alerta.url and alerta.url != '#' %}
+      <a href="{{ alerta.url }}" target="_blank" rel="noopener" class="tarj-enlace">
+        Ver fuente oficial →
+      </a>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <div class="sin-alertas">
+    <div class="sin-alertas-icono">✅</div>
+    <p class="sin-alertas-titulo">Sin alertas activas</p>
+    <p class="sin-alertas-desc">
+      No se encontraron alertas de movilidad o seguridad
+      {% if zona_filtro %}en la zona <strong>{{ zona_filtro }}</strong>{% endif %}
+      {% if cat_filtro %}de categoría <strong>{{ cat_filtro }}</strong>{% endif %}
+      en las últimas 48 horas.
+    </p>
+    {% if zona_filtro or cat_filtro %}
+    <a href="/alertas" class="btn-ver-todo">Ver todas las alertas</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</main>
+
+<!-- ═══════════════════════════════════════ PIE ═══ -->
+<footer class="pie">
+  <div class="pie-inner">
+    <p class="pie-fuentes">
+      <strong>Fuentes oficiales:</strong>
+      <a href="https://www.invias.gov.co/index.php/cierres-viales" target="_blank" rel="noopener">INVÍAS</a> ·
+      <a href="https://www.policia.gov.co/estado-de-las-vias" target="_blank" rel="noopener">Policía Nacional</a> ·
+      <a href="https://eltarra-nortedesantander.gov.co" target="_blank" rel="noopener">Alcaldía El Tarra</a> ·
+      <a href="https://www.ideam.gov.co" target="_blank" rel="noopener">IDEAM</a>
+    </p>
+    <p class="pie-nav">
+      <a href="/alertas">Alertas</a> ·
+      <a href="/historial">Historial</a> ·
+      <a href="/metricas">Métricas</a> ·
+      <a href="/api/alertas">API JSON</a>
+    </p>
+    <p class="pie-cred">
+      SAT El Tarra © 2026 · Walter Toscano &amp; Yeferson Fernández · UNAD Ingeniería de Sistemas<br>
+      Código abierto · Sin costos · Optimizado para redes 3G · Peso de página &lt; 50 KB
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

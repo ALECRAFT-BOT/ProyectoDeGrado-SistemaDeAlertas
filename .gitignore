@@ -1,0 +1,35 @@
+# SAT El Tarra – .gitignore
+
+# Entornos virtuales Python
+venv/
+env/
+.venv/
+.env/
+
+# Datos generados en tiempo de ejecución (no versionar datos de producción)
+data/*.json
+data/*.db
+
+# Logs
+logs/*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Variables de entorno
+.env
+*.env

@@ -1,0 +1,27 @@
+# render.yaml – Configuración de despliegue en Render.com
+# SAT El Tarra – Sistema de Alerta Temprana
+# Plan gratuito (free tier)
+
+services:
+  # Servicio web principal (Flask + Gunicorn)
+  - type: web
+    name: sat-eltarra-web
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn src.app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 30
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.3
+      - key: FLASK_ENV
+        value: production
+
+  # Worker para extracción cada 15 minutos
+  # Nota: En Render free tier, usar un Cron Job alternativo
+  # Ver sección 5 de la guía de despliegue
+  - type: worker
+    name: sat-eltarra-scheduler
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python src/scheduler.py

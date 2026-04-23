@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>SAT El Tarra – Métricas Técnicas</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
+</head>
+<body>
+
+<header class="cabecera">
+  <div class="cab-inner">
+    <div class="cab-logo">
+      <span class="cab-escudo">📊</span>
+      <div>
+        <span class="cab-nombre">SAT El Tarra</span>
+        <span class="cab-subtitulo">Métricas Técnicas del Sistema</span>
+      </div>
+    </div>
+    <div class="cab-acciones">
+      <a href="/alertas" class="btn-actualizar">← Volver</a>
+    </div>
+  </div>
+</header>
+
+<main class="contenedor">
+
+  <!-- Tarjetas de métricas -->
+  <div class="metricas-grid">
+    <div class="metrica-card">
+      <div class="metrica-num">{{ alertas_activas }}</div>
+      <div class="metrica-label">Alertas activas (48 h)</div>
+    </div>
+    <div class="metrica-card">
+      <div class="metrica-num">{{ alertas_historicas }}</div>
+      <div class="metrica-label">Registros históricos (SQLite)</div>
+    </div>
+    <div class="metrica-card metrica-req">
+      <div class="metrica-label">RNF01: Carga máx.</div>
+      <div class="metrica-val-req">&lt; 5 s en 3G</div>
+    </div>
+    <div class="metrica-card metrica-req">
+      <div class="metrica-label">RNF02: Peso de página</div>
+      <div class="metrica-val-req">&lt; 50 KB</div>
+    </div>
+    <div class="metrica-card metrica-req">
+      <div class="metrica-label">RNF03: Precisión filtrado</div>
+      <div class="metrica-val-req">≥ 85 %</div>
+    </div>
+    <div class="metrica-card metrica-req">
+      <div class="metrica-label">RF01: Frecuencia extracción</div>
+      <div class="metrica-val-req">cada 15 min</div>
+    </div>
+  </div>
+
+  <!-- Log de métricas -->
+  <section class="log-section">
+    <h2 class="log-titulo">📋 Últimas entradas – metricas.log</h2>
+    <p class="log-subtitulo">Última actualización registrada: <strong>{{ ultima }}</strong></p>
+    <div class="log-box">
+      {% for linea in log_lines %}
+      <div class="log-linea {% if 'ERROR' in linea %}log-error{% elif 'WARNING' in linea %}log-warn{% elif 'FIN CICLO' in linea or 'exitosamente' in linea %}log-ok{% endif %}">
+        {{ linea }}
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Requerimientos cumplidos -->
+  <section class="req-section">
+    <h2 class="log-titulo">✅ Requerimientos del Sistema</h2>
+    <table class="req-tabla">
+      <thead>
+        <tr>
+          <th>ID</th><th>Descripción</th><th>Indicador</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>RF01</td><td>Extracción automática de fuentes oficiales</td><td>≤ 15 minutos</td></tr>
+        <tr><td>RF02</td><td>Filtrado por palabras clave de riesgo</td><td>10 palabras clave activas</td></tr>
+        <tr><td>RF03</td><td>Clasificación por categoría y zona geográfica</td><td>4 categorías · 4 zonas</td></tr>
+        <tr><td>RF04</td><td>Alertas en orden cronológico descendente</td><td>Más reciente primero</td></tr>
+        <tr><td>RF05</td><td>Accesible sin instalación adicional</td><td>Navegador web básico</td></tr>
+        <tr><td>RF06</td><td>Log de métricas y errores por ciclo</td><td>metricas.log activo</td></tr>
+        <tr><td>RNF01</td><td>Tiempo de carga &lt; 5 s en 3G</td><td>HTML minimalista sin JS pesado</td></tr>
+        <tr><td>RNF02</td><td>Peso de página &lt; 50 KB</td><td>Sin imágenes ni CDN externos</td></tr>
+        <tr><td>RNF03</td><td>Precisión filtrado ≥ 85%</td><td>Expresiones regulares validadas</td></tr>
+        <tr><td>RNF04</td><td>Software 100% libre</td><td>Python · Flask · SQLite · RSS-Bridge</td></tr>
+        <tr><td>RNF05</td><td>Desplegable en plan gratuito</td><td>Railway.app / Render.com</td></tr>
+        <tr><td>RNF06</td><td>Código versionado en GitHub</td><td>Repositorio público</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+</main>
+
+<footer class="pie">
+  <div class="pie-inner">
+    <p class="pie-nav">
+      <a href="/alertas">Alertas</a> ·
+      <a href="/historial">Historial</a> ·
+      <a href="/metricas">Métricas</a> ·
+      <a href="/api/status">API Status</a>
+    </p>
+    <p class="pie-cred">SAT El Tarra © 2026 · UNAD Ingeniería de Sistemas</p>
+  </div>
+</footer>
+
+</body>
+</html>

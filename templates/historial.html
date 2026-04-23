@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>SAT El Tarra – Historial</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
+</head>
+<body>
+
+<header class="cabecera">
+  <div class="cab-inner">
+    <div class="cab-logo">
+      <span class="cab-escudo">🛡️</span>
+      <div>
+        <span class="cab-nombre">SAT El Tarra</span>
+        <span class="cab-subtitulo">Historial de Alertas · SQLite</span>
+      </div>
+    </div>
+    <div class="cab-acciones">
+      <a href="/alertas" class="btn-actualizar">← Volver</a>
+    </div>
+  </div>
+</header>
+
+<nav class="filtros-bar">
+  <div class="filtros-inner">
+    <a href="/historial" class="filtro-btn {% if not zona_filtro and not cat_filtro %}activo{% endif %}">
+      Todo el historial
+    </a>
+    {% for nombre, datos in etiquetas.items() %}
+    <a href="/historial?categoria={{ nombre }}"
+       class="filtro-btn {% if cat_filtro == nombre %}activo{% endif %}">
+      {{ datos[2] }} {{ datos[0] }}
+    </a>
+    {% endfor %}
+  </div>
+</nav>
+
+<main class="contenedor">
+  <div class="contador-bar">
+    <span class="contador-num">{{ total }}</span>
+    <span class="contador-label">registro{% if total != 1 %}s{% endif %} histórico{% if total != 1 %}s{% endif %}</span>
+    {% if zona_filtro or cat_filtro %}
+    <a href="/historial" class="limpiar-filtros">✕ Limpiar filtros</a>
+    {% endif %}
+  </div>
+
+  {% if alertas %}
+  <ul class="lista-alertas lista-historial">
+    {% for alerta in alertas %}
+    <li class="tarjeta-alerta borde-cat-{{ alerta.categoria }}">
+      <div class="tarj-header">
+        <span class="tarj-icono">{{ alerta.icono if alerta.icono else '📢' }}</span>
+        <h2 class="tarj-titulo">{{ alerta.titulo }}</h2>
+      </div>
+      <p class="tarj-desc">{{ alerta.descripcion }}</p>
+      <div class="tarj-meta">
+        <span class="tarj-fuente">{{ alerta.fuente }}</span>
+        <span class="tarj-sep">·</span>
+        <span class="tarj-zona zona-pill">{{ alerta.zona }}</span>
+        <span class="tarj-sep">·</span>
+        <span class="tarj-fecha">{{ alerta.fecha_formateada }}</span>
+        <span class="tarj-sep">·</span>
+        <span class="etiqueta etq-{{ alerta.categoria }}">{{ alerta.etiqueta_texto }}</span>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <div class="sin-alertas">
+    <div class="sin-alertas-icono">📂</div>
+    <p class="sin-alertas-titulo">Sin registros históricos</p>
+    <p class="sin-alertas-desc">El sistema aún no ha acumulado alertas en la base de datos SQLite.</p>
+    <a href="/alertas" class="btn-ver-todo">Ver alertas activas</a>
+  </div>
+  {% endif %}
+</main>
+
+<footer class="pie">
+  <div class="pie-inner">
+    <p class="pie-nav">
+      <a href="/alertas">Alertas</a> ·
+      <a href="/historial">Historial</a> ·
+      <a href="/metricas">Métricas</a> ·
+      <a href="/api/alertas">API JSON</a>
+    </p>
+    <p class="pie-cred">SAT El Tarra © 2026 · UNAD Ingeniería de Sistemas</p>
+  </div>
+</footer>
+
+</body>
+</html>
