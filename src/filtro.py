@@ -427,7 +427,7 @@ ALERTAS_DEMO = [
 
 
 def cargar_o_generar_demo() -> None:
-    """Si el JSON activo no existe o está vacío, carga datos de demo."""
+    """Si el JSON activo no existe o está vacío, intenta extraer datos reales; si falla, carga demo."""
     if JSON_PATH.exists():
         try:
             with open(JSON_PATH, encoding="utf-8") as f:
@@ -437,6 +437,21 @@ def cargar_o_generar_demo() -> None:
         except Exception:
             pass
 
+    # Intentar extraer datos reales primero
+    logger.info("Intentando extraer datos reales...")
+    try:
+        ciclo_extraccion()
+        # Verificar si se generó algo
+        if JSON_PATH.exists():
+            with open(JSON_PATH, encoding="utf-8") as f:
+                data = json.load(f)
+            if data.get("total", 0) > 0:
+                logger.info("Datos reales extraídos exitosamente.")
+                return
+    except Exception as e:
+        logger.warning("Fallo al extraer datos reales: %s", e)
+
+    # Fallback a demo
     logger.info("Cargando datos de demo (modo académico)...")
     with open(JSON_PATH, "w", encoding="utf-8") as f:
         json.dump({
