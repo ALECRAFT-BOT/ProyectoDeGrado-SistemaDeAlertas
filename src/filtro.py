@@ -129,7 +129,7 @@ FUENTES = [
     {
          "nombre":  "Alcaldía El Tarra – Facebook",
          "tipo":    "rss",
-         "url":     "https://rss-bridge.org/bridge01/?action=display&bridge=FacebookBridge&page=/alcaldiadeeltarra&format=Atom",
+         "url":     "https://rss-bridge.org/bridge01/?action=display&bridge=FacebookBridge&page=alcaldiadeeltarra&format=Atom",
          "url_alt": "https://www.facebook.com/alcaldiadeeltarra",
          "icono":   "📱",
     },
