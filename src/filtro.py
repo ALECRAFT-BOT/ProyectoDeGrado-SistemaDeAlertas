@@ -130,6 +130,13 @@ FUENTES = [
         "url_alt": "https://www.ideam.gov.co/web/tiempo-y-clima/alertas-meteorologicas",
         "icono":   "🌊",
     },
+    {
+    "nombre":  "Alcaldía El Tarra – Alertas Viales",
+    "tipo":    "scraping",
+    "url":     "https://alecraft-bot.github.io/reporte-eltarra/",
+    "url_alt": "https://alecraft-bot.github.io/reporte-eltarra/",
+    "icono":   "🏛️",
+    },
 ]
 
 # ─────────────────────────────────────────────
@@ -212,9 +219,10 @@ def extraer_scraping(fuente: dict) -> list[dict]:
 
         # Estrategia genérica: buscar etiquetas semánticas de noticias
         candidatos = (
-            soup.select("article") or
-            soup.select(".noticia, .news-item, .entry, .post") or
-            soup.select("h2 a, h3 a")
+        soup.select("article") or
+        soup.select(".noticia, .news-item, .entry, .post") or
+        soup.select("h1, h2 a, h3 a") or  
+        soup.select("p")
         )
         logger.info("[SCRAPING] %s | latencia=%.3fs | candidatos=%d",
                     fuente["nombre"], latencia, len(candidatos))
