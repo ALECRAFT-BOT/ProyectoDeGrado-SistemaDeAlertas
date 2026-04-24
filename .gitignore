@@ -33,3 +33,6 @@ Thumbs.db
 # Variables de entorno
 .env
 *.env
+
+# Scripts de pruebas temporales
+test_*.py

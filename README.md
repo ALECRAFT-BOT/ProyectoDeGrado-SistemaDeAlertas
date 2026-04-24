@@ -10,7 +10,7 @@
 
 ## ¿Qué es SAT El Tarra?
 
-SAT El Tarra es un sistema de alerta temprana de código abierto diseñado para el municipio de **El Tarra, Norte de Santander (Colombia)**, que centraliza, filtra y presenta alertas de movilidad y seguridad vial desde fuentes oficiales (INVÍAS, Policía Nacional, Alcaldía de El Tarra e IDEAM).
+SAT El Tarra es un sistema de alerta temprana de código abierto diseñado para el municipio de **El Tarra, Norte de Santander (Colombia)**, que centraliza, filtra y presenta alertas de movilidad y seguridad vial extrayendo datos en tiempo real de fuentes oficiales y estables (como **INVÍAS Noticias Viales** y la **Gobernación de Norte de Santander**).
 
 **Problema que resuelve:** Los habitantes de El Tarra no tienen acceso centralizado a información veraz y oportuna sobre el estado de las vías. Dependen de grupos de WhatsApp y Facebook con información fragmentada e inverificable.
 
@@ -33,8 +33,8 @@ SAT El Tarra es un sistema de alerta temprana de código abierto diseñado para 
 ## Arquitectura del sistema
 
 ```
-CAPA 1 – Extracción    │ INVÍAS · Policía · Alcaldía · IDEAM
-(RSS-Bridge/Requests)  │ → feeds JSON cada 15 min (cron/scheduler)
+CAPA 1 – Extracción    │ INVÍAS (Noticias Viales) · Gobernación N. de Santander
+(Requests/BS4)         │ → scraping quirúrgico (HTML) cada 15 min con reintentos
                         │
 CAPA 2 – Procesamiento │ filtro.py → feedparser → SHA-1 dedup
 (Python 3.12)          │ → regex keywords → clasificador zona/tipo
@@ -74,11 +74,13 @@ venv\Scripts\activate           # Windows
 # 3. Instalar dependencias
 pip install -r requirements.txt
 
-# 4. Ejecutar el servidor web
+# 4. Ejecutar el servidor web (asegúrate de activar el venv en tu terminal)
 python src/app.py
+# (En Windows si el venv no se activó: .\venv\Scripts\python.exe src\app.py)
 
 # 5. En otra terminal, ejecutar el scheduler (extracción cada 15 min)
 python src/scheduler.py
+# (En Windows si el venv no se activó: .\venv\Scripts\python.exe src\scheduler.py)
 
 # 6. Abrir en navegador
 # http://localhost:5000

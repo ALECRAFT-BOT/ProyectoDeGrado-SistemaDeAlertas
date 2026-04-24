@@ -91,8 +91,10 @@ ZONAS = {
                                 r"\bel\s+tarra\b", r"\bcatatumbo\b"],
     "El Tarra – Ocaña":       [r"\boca[ñn]a\b", r"\bla\s+playa\b", r"\bel\s+tarra\b"],
     "El Tarra – La Gabarra":  [r"\bla\s+gabarra\b", r"\bel\s+tarra\b"],
-    "Regional Catatumbo":     [r"\bcatatumbo\b", r"\bnorte\s+de\s+santander\b",
-                                r"\bnorsan\b"],
+    "Norte de Santander / Catatumbo": [r"\bcatatumbo\b", r"\bnorte\s+de\s+santander\b",
+                                r"\bnorsan\b", r"\bc[úu]cuta\b", r"\bconvenci[oó]n\b", 
+                                r"\bteorama\b", r"\bsan\s+calixto\b", r"\bhacar[ií]\b", 
+                                r"\bpuerto\s+santander\b", r"\bsardinata\b", r"\bpamplona\b"],
 }
 
 # ─────────────────────────────────────────────
@@ -103,38 +105,27 @@ ZONAS = {
 # ─────────────────────────────────────────────
 FUENTES = [
     {
-        "nombre":  "INVÍAS Norte de Santander",
-        "tipo":    "scraping",
-        "url":     "https://www.invias.gov.co/index.php/cierres-viales",
-        "url_alt": "https://www.invias.gov.co/index.php/cierres-viales",
+        "nombre":  "INVÍAS – Noticias Viales",
+        "tipo":    "invias_noticias",
+        "url":     "https://www.invias.gov.co/publicaciones/noticias/",
+        "url_alt": "https://www.invias.gov.co/publicaciones/noticias/",
         "icono":   "🛣️",
     },
     {
-        "nombre":  "Policía Nacional – Tránsito",
-        "tipo":    "rss",
-        "url":     "https://www.policia.gov.co/estado-de-las-vias?format=feed&type=rss",
-        "url_alt": "https://www.policia.gov.co/noticias",
-        "icono":   "🚔",
-    },
-    {
-        "nombre":  "Alcaldía El Tarra – Alertas Viales",
+        "nombre":  "Gobernación Norte de Santander",
         "tipo":    "scraping",
-        "url":     "https://alecraft-bot.github.io/reporte-eltarra/",
-        "url_alt": "https://alecraft-bot.github.io/reporte-eltarra/",
+        "url":     "https://www.nortedesantander.gov.co/",
+        "url_alt": "https://www.nortedesantander.gov.co/",
         "icono":   "🏛️",
     },
-    # FUENTES RSS-BRIDGE (OPCIONALES)
-    # Para usar: descomenta las líneas y asegúrate de reemplazar los IDs con los correctos
-    # de las páginas de Facebook, luego haz git push
-    # IMPORTANTE: El "page" debe ser el ID numérico real de Facebook (ej: 1594384184118949)
-    # No usar nombres de usuario. Encontrar ID en: https://findmyfbid.com/
-    {
-        "nombre":  "Alcaldía El Tarra – Facebook",
-        "tipo":    "rss",
-        "url":     "https://rss-bridge.org/bridge01/?action=display&bridge=FacebookBridge&page=379542975251620&format=Atom",
-        "url_alt": "https://www.facebook.com/alcaldiadeeltarra",
-        "icono":   "📱",
-    },
+    # NOTA: datos.gov.co suele tener actualizaciones semanales/mensuales, no es ideal para tiempo real
+    # {
+    #     "nombre":  "datos.gov.co – Red Vial INVÍAS",
+    #     "tipo":    "api_json",
+    #     "url":     "https://www.datos.gov.co/resource/ie7y-asdn.json",
+    #     "url_alt": "https://www.datos.gov.co/Transporte/Red-Vial/ie7y-asdn",
+    #     "icono":   "📊",
+    # },
 ]
 # ─────────────────────────────────────────────
 # INICIALIZACIÓN DE BASE DE DATOS SQLITE (Capa 3)
@@ -168,14 +159,31 @@ def _sha1(texto: str) -> str:
     return hashlib.sha1(texto.encode("utf-8")).hexdigest()[:16]
 
 
+def hacer_peticion_con_reintentos(url: str, intentos=3, timeout=30):
+    """Realiza peticiones HTTP con lógica de reintentos."""
+    headers = {
+        "User-Agent": "SAT-ElTarra/1.0 (bot educativo UNAD 2026) Mozilla/5.0",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+    }
+    for i in range(intentos):
+        try:
+            resp = requests.get(url, headers=headers, timeout=timeout)
+            resp.raise_for_status()
+            return resp
+        except Exception as e:
+            if i == intentos - 1:
+                raise e
+            logger.warning("Intento %d fallido para %s, reintentando...", i+1, url)
+            time.sleep(5 * (i + 1))
+    return None
+
+
 def extraer_feed_rss(fuente: dict) -> list[dict]:
     """Extrae publicaciones desde un feed RSS/Atom usando feedparser."""
     items = []
     t0 = time.time()
     try:
-        headers = {"User-Agent": "SAT-ElTarra/1.0 (bot educativo UNAD 2026)"}
-        resp = requests.get(fuente["url"], headers=headers, timeout=10)
-        resp.raise_for_status()
+        resp = hacer_peticion_con_reintentos(fuente["url"], intentos=2, timeout=20)
         feed = feedparser.parse(resp.content)
         latencia = round(time.time() - t0, 3)
         logger.info("[RSS] %s | latencia=%.3fs | entradas=%d",
@@ -198,8 +206,85 @@ def extraer_feed_rss(fuente: dict) -> list[dict]:
     except Exception as exc:
         latencia = round(time.time() - t0, 3)
         logger.warning("[RSS-ERROR] %s | %.3fs | %s", fuente["nombre"], latencia, exc)
-        # Intento con URL alternativa mediante scraping
-        items = extraer_scraping(fuente)
+    return items
+
+
+def extraer_invias_noticias(fuente: dict) -> list[dict]:
+    """Scraping quirúrgico para INVÍAS Noticias."""
+    items = []
+    t0 = time.time()
+    try:
+        resp = hacer_peticion_con_reintentos(fuente["url"], intentos=3, timeout=30)
+        soup = BeautifulSoup(resp.text, "html.parser")
+        
+        for tag in soup.select("nav, script, style, footer, header"):
+            tag.decompose()
+            
+        candidatos = soup.select("h2 a")
+        latencia = round(time.time() - t0, 3)
+        logger.info("[INVIAS] %s | latencia=%.3fs | candidatos=%d", fuente["nombre"], latencia, len(candidatos))
+        
+        for tag in candidatos[:15]:
+            titulo = tag.get_text(" ", strip=True)[:200]
+            if len(titulo) < 10: continue
+            
+            url = tag.get("href", fuente["url"])
+            if url.startswith("/"):
+                url = f"https://www.invias.gov.co{url}"
+                
+            uid = _sha1(titulo + url)
+            items.append({
+                "id":          uid,
+                "titulo":      titulo,
+                "descripcion": titulo,
+                "url":         url,
+                "fecha_pub":   datetime.now(timezone.utc).isoformat(),
+                "fuente":      fuente["nombre"],
+                "icono":       fuente["icono"],
+            })
+    except Exception as exc:
+        latencia = round(time.time() - t0, 3)
+        logger.error("[INVIAS-ERROR] %s | %.3fs | %s", fuente["nombre"], latencia, exc)
+    return items
+
+
+def extraer_datos_gov(fuente: dict) -> list[dict]:
+    """Consume JSON desde datos.gov.co Socrata API."""
+    items = []
+    t0 = time.time()
+    try:
+        params = {
+            "$where": "departamento LIKE '%SANTANDER%'",
+            "$limit": "50"
+        }
+        resp = requests.get(fuente["url"], params=params, headers={"Accept": "application/json"}, timeout=30)
+        resp.raise_for_status()
+        data = resp.json()
+        latencia = round(time.time() - t0, 3)
+        logger.info("[DATOS.GOV] %s | latencia=%.3fs | registros=%d", fuente["nombre"], latencia, len(data))
+        
+        for record in data[:10]:
+            nombre = record.get("nombre_de_la_v_a", record.get("codigo_via", "Vía sin nombre"))
+            estado = record.get("estado_de_la_v_a", "")
+            if not estado: continue
+            
+            titulo = f"Reporte Red Vial: {nombre} ({estado})"
+            desc = f"Vía: {nombre}, Estado: {estado}, Municipio: {record.get('municipio', '')}, Administrador: {record.get('administrador', '')}"
+            url = fuente["url_alt"]
+            
+            uid = _sha1(titulo + url)
+            items.append({
+                "id":          uid,
+                "titulo":      titulo[:200],
+                "descripcion": desc[:500],
+                "url":         url,
+                "fecha_pub":   datetime.now(timezone.utc).isoformat(),
+                "fuente":      fuente["nombre"],
+                "icono":       fuente["icono"],
+            })
+    except Exception as exc:
+        latencia = round(time.time() - t0, 3)
+        logger.error("[DATOS.GOV-ERROR] %s | %.3fs | %s", fuente["nombre"], latencia, exc)
     return items
 
 
@@ -208,25 +293,30 @@ def extraer_scraping(fuente: dict) -> list[dict]:
     items = []
     t0 = time.time()
     try:
-        headers = {"User-Agent": "SAT-ElTarra/1.0 (bot educativo UNAD 2026)"}
-        resp = requests.get(fuente["url_alt"], headers=headers, timeout=12)
-        resp.raise_for_status()
+        resp = hacer_peticion_con_reintentos(fuente["url_alt"], intentos=3, timeout=30)
         soup = BeautifulSoup(resp.text, "html.parser")
         latencia = round(time.time() - t0, 3)
 
-        # Estrategia genérica: buscar etiquetas semánticas de noticias
+        for tag in soup.select("nav, script, style, footer, header"):
+            tag.decompose()
+
         candidatos = (
-        soup.select("article") or
-        soup.select(".noticia, .news-item, .entry, .post") or
-        soup.select("h1, h2 a, h3 a") or  
-        soup.select("p")
+            soup.select("article") or
+            soup.select(".noticia, .news-item, .entry, .post") or
+            soup.select("h1, h2 a, h3 a") or  
+            soup.select("p")
         )
         logger.info("[SCRAPING] %s | latencia=%.3fs | candidatos=%d",
                     fuente["nombre"], latencia, len(candidatos))
 
         for tag in candidatos[:20]:
             titulo = tag.get_text(" ", strip=True)[:200]
+            if len(titulo) < 15: continue
+
             enlace = tag.find("a")
+            if not enlace and tag.name == "a":
+                enlace = tag
+
             url    = enlace["href"] if enlace and enlace.get("href") else fuente["url_alt"]
             if url.startswith("/"):
                 from urllib.parse import urlparse
@@ -264,13 +354,13 @@ def detectar_categoria(texto: str) -> str | None:
     return None
 
 
-def detectar_zona(texto: str) -> str:
-    """Retorna la primera zona geográfica coincidente."""
+def detectar_zona(texto: str) -> str | None:
+    """Retorna la primera zona geográfica coincidente o None si no pertenece a la región."""
     for zona, patrones in ZONAS.items():
         for patron in patrones:
             if re.search(patron, texto, re.IGNORECASE):
                 return zona
-    return "Norte de Santander"
+    return None
 
 
 def filtrar_y_clasificar(items: list[dict]) -> list[dict]:
@@ -291,6 +381,9 @@ def filtrar_y_clasificar(items: list[dict]) -> list[dict]:
             continue  # No es alerta relevante
 
         zona = detectar_zona(texto)
+        if zona is None:
+            continue  # No es de Norte de Santander / Catatumbo
+
         item["categoria"] = categoria
         item["zona"]      = zona
         item["fecha_cap"] = datetime.now(timezone.utc).isoformat()
@@ -473,8 +566,13 @@ def ciclo_extraccion() -> None:
     for fuente in FUENTES:
         if fuente["tipo"] == "rss":
             items = extraer_feed_rss(fuente)
+        elif fuente["tipo"] == "invias_noticias":
+            items = extraer_invias_noticias(fuente)
+        elif fuente["tipo"] == "api_json":
+            items = extraer_datos_gov(fuente)
         else:
             items = extraer_scraping(fuente)
+            
         todos_los_items.extend(items)
         logger.info("Fuente %s: %d items extraídos", fuente["nombre"], len(items))
 
