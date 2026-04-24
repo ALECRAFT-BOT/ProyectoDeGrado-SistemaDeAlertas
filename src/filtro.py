@@ -97,14 +97,15 @@ ZONAS = {
 
 # ─────────────────────────────────────────────
 # FUENTES OFICIALES (RF01)
-# Nota: Fuentes actualizadas basadas en accesibilidad. RSS-Bridge no se usa actualmente;
-# se puede integrar si hay una instancia externa para convertir páginas JS en feeds.
+# Nota: Fuentes actualizadas basadas en accesibilidad. 
+# RSS-Bridge (https://rss-bridge.org/bridge01/) puede usarse para agregar fuentes de redes sociales.
+# Ver sección "FUENTES RSS-BRIDGE" al final para opciones comentadas.
 # ─────────────────────────────────────────────
 FUENTES = [
     {
         "nombre":  "INVÍAS Norte de Santander",
-        "tipo":    "scraping",  # Cambiado a scraping ya que RSS da 403
-        "url":     "https://www.invias.gov.co/index.php/cierres-viales",  # URL alternativa
+        "tipo":    "scraping",
+        "url":     "https://www.invias.gov.co/index.php/cierres-viales",
         "url_alt": "https://www.invias.gov.co/index.php/cierres-viales",
         "icono":   "🛣️",
     },
@@ -115,8 +116,6 @@ FUENTES = [
         "url_alt": "https://www.policia.gov.co/noticias",
         "icono":   "🚔",
     },
-    # Alcaldía El Tarra removida por timeout
-    # IDEAM removido por 404
     {
         "nombre":  "Alcaldía El Tarra – Alertas Viales",
         "tipo":    "scraping",
@@ -124,7 +123,17 @@ FUENTES = [
         "url_alt": "https://alecraft-bot.github.io/reporte-eltarra/",
         "icono":   "🏛️",
     },
-    ]
+    # FUENTES RSS-BRIDGE (OPCIONALES)
+    # Para usar: descomenta las líneas y asegúrate de reemplazar los IDs con los correctos
+    # de las páginas de Facebook, luego haz git push
+    {
+         "nombre":  "Alcaldía El Tarra – Facebook",
+         "tipo":    "rss",
+         "url":     "https://rss-bridge.org/bridge01/?action=display&bridge=FacebookBridge&page=/alcaldiadeeltarra&format=Atom",
+         "url_alt": "https://www.facebook.com/alcaldiadeeltarra",
+         "icono":   "📱",
+    },
+]
 # ─────────────────────────────────────────────
 # INICIALIZACIÓN DE BASE DE DATOS SQLITE (Capa 3)
 # ─────────────────────────────────────────────
