@@ -118,6 +118,13 @@ FUENTES = [
         "url_alt": "https://www.nortedesantander.gov.co/",
         "icono":   "🏛️",
     },
+    {
+        "nombre":  "Google News – Reportes Catatumbo",
+        "tipo":    "rss",
+        "url":     "https://news.google.com/rss/search?q=El+Tarra+Norte+de+Santander+vias+OR+movilidad+OR+paro+OR+cierre&hl=es-419&gl=CO&ceid=CO:es-419",
+        "url_alt": "https://news.google.com/",
+        "icono":   "📰",
+    },
     # NOTA: datos.gov.co suele tener actualizaciones semanales/mensuales, no es ideal para tiempo real
     # {
     #     "nombre":  "datos.gov.co – Red Vial INVÍAS",
