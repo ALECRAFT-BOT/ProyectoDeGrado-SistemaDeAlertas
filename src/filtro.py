@@ -199,7 +199,18 @@ def extraer_feed_rss(fuente: dict) -> list[dict]:
             titulo = getattr(entry, "title", "Sin título")
             desc   = getattr(entry, "summary", getattr(entry, "description", ""))
             enlace = getattr(entry, "link", fuente["url"])
-            fecha  = getattr(entry, "published", datetime.now(timezone.utc).isoformat())
+            
+            # Filtrar por antigüedad (máximo 7 días de antigüedad)
+            fecha_parsed = getattr(entry, "published_parsed", None)
+            if fecha_parsed:
+                import calendar
+                dt = datetime.fromtimestamp(calendar.timegm(fecha_parsed), timezone.utc)
+                if datetime.now(timezone.utc) - dt > timedelta(days=7):
+                    continue  # Descartar noticias viejas
+                fecha = dt.isoformat()
+            else:
+                fecha = datetime.now(timezone.utc).isoformat()
+                
             uid    = _sha1(titulo + enlace)
             items.append({
                 "id":          uid,
