@@ -126,13 +126,15 @@ FUENTES = [
     # FUENTES RSS-BRIDGE (OPCIONALES)
     # Para usar: descomenta las líneas y asegúrate de reemplazar los IDs con los correctos
     # de las páginas de Facebook, luego haz git push
-    {
-         "nombre":  "Alcaldía El Tarra – Facebook",
-         "tipo":    "rss",
-         "url":     "https://rss-bridge.org/bridge01/?action=display&bridge=FacebookBridge&page=alcaldiadeeltarra&format=Atom",
-         "url_alt": "https://www.facebook.com/alcaldiadeeltarra",
-         "icono":   "📱",
-    },
+    # IMPORTANTE: El "page" debe ser el ID numérico real de Facebook (ej: 1594384184118949)
+    # No usar nombres de usuario. Encontrar ID en: https://findmyfbid.com/
+    # {
+    #     "nombre":  "Alcaldía El Tarra – Facebook",
+    #     "tipo":    "rss",
+    #     "url":     "https://rss-bridge.org/bridge01/?action=display&bridge=FacebookBridge&page=NUMERO_ID_AQUI&format=Atom",
+    #     "url_alt": "https://www.facebook.com/alcaldiadeeltarra",
+    #     "icono":   "📱",
+    # },
 ]
 # ─────────────────────────────────────────────
 # INICIALIZACIÓN DE BASE DE DATOS SQLITE (Capa 3)
