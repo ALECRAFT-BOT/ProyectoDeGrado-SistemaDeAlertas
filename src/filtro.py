@@ -517,39 +517,28 @@ ALERTAS_DEMO = [
 
 
 def cargar_o_generar_demo() -> None:
-    """Si el JSON activo no existe o está vacío, intenta extraer datos reales; si falla, carga demo."""
+    """Si el JSON activo no existe, intenta extraer datos reales o crea uno vacío."""
     if JSON_PATH.exists():
         try:
             with open(JSON_PATH, encoding="utf-8") as f:
                 data = json.load(f)
-            if data.get("total", 0) > 0:
-                return  # Ya hay datos reales
+            if data.get("total", 0) >= 0:
+                return  # Ya hay datos (reales o vacíos)
         except Exception:
             pass
 
     # Intentar extraer datos reales primero
-    logger.info("Intentando extraer datos reales...")
+    logger.info("Iniciando primer ciclo de extracción...")
     try:
         ciclo_extraccion()
-        # Verificar si se generó algo
         if JSON_PATH.exists():
-            with open(JSON_PATH, encoding="utf-8") as f:
-                data = json.load(f)
-            if data.get("total", 0) > 0:
-                logger.info("Datos reales extraídos exitosamente.")
-                return
+            return
     except Exception as e:
-        logger.warning("Fallo al extraer datos reales: %s", e)
+        logger.warning("Fallo al extraer datos reales en el inicio: %s", e)
 
-    # Fallback a demo
-    logger.info("Cargando datos de demo (modo académico)...")
-    with open(JSON_PATH, "w", encoding="utf-8") as f:
-        json.dump({
-            "ultima_actualizacion": datetime.now(timezone.utc).isoformat(),
-            "total": len(ALERTAS_DEMO),
-            "modo": "demo",
-            "alertas": ALERTAS_DEMO,
-        }, f, ensure_ascii=False, indent=2)
+    # Si todo falla, crear JSON vacío en lugar de demo
+    logger.info("Creando JSON vacío por defecto...")
+    guardar_json([])
 
 
 # ─────────────────────────────────────────────
@@ -582,7 +571,9 @@ def ciclo_extraccion() -> None:
         guardar_json(alertas)
         guardar_db(conn, alertas)
     else:
-        logger.warning("Ninguna alerta filtrada en este ciclo. Manteniendo JSON anterior.")
+        logger.warning("Ninguna alerta filtrada en este ciclo.")
+        if not JSON_PATH.exists():
+            guardar_json([]) # Crear archivo vacío inicial
 
     conn.close()
     logger.info("FIN CICLO – %s", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
