@@ -17,7 +17,7 @@ UNAD – Ingeniería de Sistemas – 2026
 
 import json
 import sqlite3
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 from flask import Flask, render_template, jsonify, request, redirect, url_for
@@ -151,7 +151,9 @@ def alertas():
     ultima = data.get("ultima_actualizacion", "")
     try:
         dt = datetime.fromisoformat(ultima.replace("Z", "+00:00"))
-        ultima_fmt = dt.strftime("%d/%m/%Y a las %H:%M UTC")
+        # Convertir a hora local (Colombia UTC-5)
+        dt_local = dt.astimezone(timezone(timedelta(hours=-5)))
+        ultima_fmt = dt_local.strftime("%d/%m/%Y a las %I:%M %p (Hora Local)")
     except Exception:
         ultima_fmt = ultima or "—"
 
@@ -235,12 +237,20 @@ def metricas():
         conn = sqlite3.connect(DB_PATH)
         hist_count = conn.execute("SELECT COUNT(*) FROM alertas").fetchone()[0]
         conn.close()
+    ultima_raw = data.get("ultima_actualizacion", "")
+    try:
+        dt = datetime.fromisoformat(ultima_raw.replace("Z", "+00:00"))
+        dt_local = dt.astimezone(timezone(timedelta(hours=-5)))
+        ultima_fmt = dt_local.strftime("%d/%m/%Y a las %I:%M %p (Hora Local)")
+    except Exception:
+        ultima_fmt = ultima_raw or "—"
+
     return render_template(
         "metricas.html",
         log_lines=lineas,
         alertas_activas=data.get("total", 0),
         alertas_historicas=hist_count,
-        ultima=data.get("ultima_actualizacion", "—"),
+        ultima=ultima_fmt,
     )
 
 
