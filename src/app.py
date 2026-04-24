@@ -23,7 +23,7 @@ from pathlib import Path
 from flask import Flask, render_template, jsonify, request, redirect, url_for
 
 # Importar función de demo
-from filtro import cargar_o_generar_demo
+from .filtro import cargar_o_generar_demo
 
 # ─────────────────────────────────────────────
 # CONFIGURACIÓN DE RUTAS
