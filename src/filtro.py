@@ -97,14 +97,14 @@ ZONAS = {
 
 # ─────────────────────────────────────────────
 # FUENTES OFICIALES (RF01)
-# Nota: RSS-Bridge convierte las páginas en feeds JSON/RSS.
-# Durante pruebas sin RSS-Bridge activo, se usa scraping directo.
+# Nota: Fuentes actualizadas basadas en accesibilidad. RSS-Bridge no se usa actualmente;
+# se puede integrar si hay una instancia externa para convertir páginas JS en feeds.
 # ─────────────────────────────────────────────
 FUENTES = [
     {
         "nombre":  "INVÍAS Norte de Santander",
-        "tipo":    "rss",
-        "url":     "https://www.invias.gov.co/index.php/cierres-viales?format=feed&type=rss",
+        "tipo":    "scraping",  # Cambiado a scraping ya que RSS da 403
+        "url":     "https://www.invias.gov.co/index.php/cierres-viales",  # URL alternativa
         "url_alt": "https://www.invias.gov.co/index.php/cierres-viales",
         "icono":   "🛣️",
     },
@@ -115,29 +115,14 @@ FUENTES = [
         "url_alt": "https://www.policia.gov.co/noticias",
         "icono":   "🚔",
     },
+    # Alcaldía El Tarra removida por timeout
+    # IDEAM removido por 404
     {
-        "nombre":  "Alcaldía El Tarra",
+        "nombre":  "Alcaldía El Tarra – Alertas Viales",
         "tipo":    "scraping",
-        "url":     "https://eltarra-nortedesantander.gov.co/noticias",
-        "url_alt": "https://eltarra-nortedesantander.gov.co/noticias",
+        "url":     "https://alecraft-bot.github.io/reporte-eltarra/",
+        "url_alt": "https://alecraft-bot.github.io/reporte-eltarra/",
         "icono":   "🏛️",
-    },
-    # Fuente adicional: IDEAM para alertas ambientales
-    {
-        "nombre":  "IDEAM – Alertas Hidro",
-        "tipo":    "rss",
-        "url":     "https://www.ideam.gov.co/web/tiempo-y-clima/alertas-meteorologicas",
-        "url_alt": "https://www.ideam.gov.co/web/tiempo-y-clima/alertas-meteorologicas",
-        "icono":   "🌊",
-    },
-    {
-    "nombre":  "Alcaldía El Tarra – Alertas Viales",
-    "tipo":    "scraping",
-    "url":     "https://alecraft-bot.github.io/reporte-eltarra/",
-    "url_alt": "https://alecraft-bot.github.io/reporte-eltarra/",
-    "icono":   "🏛️",
-    },
-]
 
 # ─────────────────────────────────────────────
 # INICIALIZACIÓN DE BASE DE DATOS SQLITE (Capa 3)
