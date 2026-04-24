@@ -123,7 +123,8 @@ FUENTES = [
         "url":     "https://alecraft-bot.github.io/reporte-eltarra/",
         "url_alt": "https://alecraft-bot.github.io/reporte-eltarra/",
         "icono":   "🏛️",
-
+    },
+    ]
 # ─────────────────────────────────────────────
 # INICIALIZACIÓN DE BASE DE DATOS SQLITE (Capa 3)
 # ─────────────────────────────────────────────
