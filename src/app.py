@@ -22,6 +22,9 @@ from pathlib import Path
 
 from flask import Flask, render_template, jsonify, request, redirect, url_for
 
+# Importar función de demo
+from filtro import cargar_o_generar_demo
+
 # ─────────────────────────────────────────────
 # CONFIGURACIÓN DE RUTAS
 # ─────────────────────────────────────────────
@@ -52,7 +55,9 @@ ETIQUETAS_CATEGORIA = {
 }
 
 def _leer_json() -> dict:
-    """Lee el archivo JSON activo; devuelve estructura vacía si falla."""
+    """Lee el archivo JSON activo; genera demo si no existe."""
+    if not JSON_PATH.exists():
+        cargar_o_generar_demo()
     try:
         with open(JSON_PATH, encoding="utf-8") as f:
             return json.load(f)
