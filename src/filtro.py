@@ -77,7 +77,9 @@ PALABRAS_CLAVE = {
         r"\bdisturbi", r"\bconflicto\b", r"\boperaci[oó]n\b",
         r"\bpolicía\b", r"\bejército\b", r"\bseguridad\b",
         r"\balerta\s+roja\b", r"\balerta\s+naranja\b",
-        r"\btoque\s+de\s+queda\b", r"\bconfrontaci[oó]n\b",
+        r"\btoque\s+de\s+queda\b", r"\bconfrontaci[oó]n\b", r"\batentado\b",
+        r"\bataque\b", r"\bdrones\b", r"\benfrentamiento\b", r"\bcombate\b",
+        r"\bexplosivo\b", r"\bheridos\b",
     ],
     "accidente": [
         r"\baccidente\b", r"\bvolcamiento\b", r"\bcolis[ií]on\b",
@@ -120,7 +122,7 @@ FUENTES = [
     {
         "nombre":  "Google News – Reportes Catatumbo",
         "tipo":    "rss",
-        "url":     "https://news.google.com/rss/search?q=El+Tarra+Norte+de+Santander+vias+OR+movilidad+OR+paro+OR+cierre&hl=es-419&gl=CO&ceid=CO:es-419",
+        "url":     "https://news.google.com/rss/search?q=(El+Tarra+OR+Catatumbo)+Norte+de+Santander+(vias+OR+movilidad+OR+paro+OR+cierre+OR+seguridad+OR+ataque+OR+atentado)&hl=es-419&gl=CO&ceid=CO:es-419",
         "url_alt": "https://news.google.com/",
         "icono":   "📰",
     },
