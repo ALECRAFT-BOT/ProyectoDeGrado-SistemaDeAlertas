@@ -196,8 +196,8 @@ def extraer_feed_rss(fuente: dict) -> list[dict]:
             if fecha_parsed:
                 import calendar
                 dt = datetime.fromtimestamp(calendar.timegm(fecha_parsed), timezone.utc)
-                if datetime.now(timezone.utc) - dt > timedelta(days=7):
-                    continue  # Descartar noticias viejas
+                if datetime.now(timezone.utc) - dt > timedelta(days=30):
+                    continue  # Descartar noticias viejas (máximo 1 mes)
                 fecha = dt.isoformat()
             else:
                 fecha = datetime.now(timezone.utc).isoformat()
@@ -392,6 +392,22 @@ def filtrar_y_clasificar(items: list[dict]) -> list[dict]:
         zona = detectar_zona(texto)
         if zona is None:
             continue  # No es de Norte de Santander / Catatumbo
+
+        # Filtrar por antigüedad según el tipo de evento
+        fecha_str = item.get("fecha_pub")
+        if fecha_str:
+            try:
+                dt = datetime.fromisoformat(fecha_str.replace("Z", "+00:00"))
+                antiguedad = datetime.now(timezone.utc) - dt
+                
+                es_mantenimiento = re.search(r"\b(mantenimiento|pavimentaci[oó]n|obras?|arreglos?)\b", texto, re.IGNORECASE)
+                
+                if es_mantenimiento and antiguedad > timedelta(days=30):
+                    continue  # Mantenimiento/obras caducan al mes
+                elif not es_mantenimiento and antiguedad > timedelta(days=7):
+                    continue  # Demás alertas caducan a los 7 días
+            except Exception:
+                pass
 
         item["categoria"] = categoria
         item["zona"]      = zona
