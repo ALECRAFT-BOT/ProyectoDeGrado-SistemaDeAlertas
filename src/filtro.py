@@ -122,7 +122,7 @@ FUENTES = [
     {
         "nombre":  "Google News – Reportes Catatumbo",
         "tipo":    "rss",
-        "url":     "https://news.google.com/rss/search?q=(El+Tarra+OR+Catatumbo)+Norte+de+Santander+(vias+OR+movilidad+OR+paro+OR+cierre+OR+seguridad+OR+ataque+OR+atentado)&hl=es-419&gl=CO&ceid=CO:es-419",
+        "url":     "https://news.google.com/rss/search?q=(El+Tarra+OR+Catatumbo)+Norte+de+Santander+(vias+OR+movilidad+OR+mantenimiento+OR+obras+OR+paro+OR+cierre+OR+seguridad+OR+ataque+OR+atentado)&hl=es-419&gl=CO&ceid=CO:es-419",
         "url_alt": "https://news.google.com/",
         "icono":   "📰",
     },
