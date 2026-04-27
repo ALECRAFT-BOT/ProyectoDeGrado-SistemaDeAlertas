@@ -39,27 +39,41 @@
   </div>
 </header>
 
+<!-- ═══════════════════════════════════════ PESTAÑAS ═══ -->
+<nav class="pestanas">
+  <div class="pestanas-inner">
+    <a href="/alertas" class="pestana-btn {% if not es_noticias %}activo{% endif %}">
+      ⚠️ Alertas Viales
+    </a>
+    <a href="/noticias" class="pestana-btn {% if es_noticias %}activo{% endif %}">
+      📰 Noticias Catatumbo
+    </a>
+  </div>
+</nav>
+
 <!-- ═══════════════════════════════════════ FILTROS ═══ -->
 <nav class="filtros-bar">
   <div class="filtros-inner">
-    <a href="/alertas"
+    <a href="{{ '/noticias' if es_noticias else '/alertas' }}"
        class="filtro-btn {% if not zona_filtro and not cat_filtro %}activo{% endif %}">
       Todo
     </a>
     {% for zona in zonas %}
-    <a href="/alertas?zona={{ zona | urlencode }}"
+    <a href="{{ '/noticias' if es_noticias else '/alertas' }}?zona={{ zona | urlencode }}"
        class="filtro-btn {% if zona_filtro == zona %}activo{% endif %}">
       {{ zona.replace('El Tarra – ', '') }}
     </a>
     {% endfor %}
-    <a href="/alertas?categoria=seguridad"
-       class="filtro-btn {% if cat_filtro == 'seguridad' %}activo{% endif %}">
-      🚔 Seguridad
+    {% if not es_noticias %}
+    <a href="/alertas?categoria=movilidad"
+       class="filtro-btn {% if cat_filtro == 'movilidad' %}activo{% endif %}">
+      🛣️ Movilidad
     </a>
     <a href="/alertas?categoria=emergencia_ambiental"
        class="filtro-btn {% if cat_filtro == 'emergencia_ambiental' %}activo{% endif %}">
       🌊 Ambiental
     </a>
+    {% endif %}
   </div>
 </nav>
 
@@ -69,19 +83,24 @@
   <!-- Contador de alertas -->
   <div class="contador-bar">
     <span class="contador-num">{{ total }}</span>
-    <span class="contador-label">alerta{% if total != 1 %}s{% endif %} encontrada{% if total != 1 %}s{% endif %}</span>
+    <span class="contador-label">
+      {{ 'noticia' if es_noticias else 'alerta' }}{{ 's' if total != 1 else '' }}
+      encontrada{{ 's' if total != 1 else '' }}
+    </span>
     {% if zona_filtro or cat_filtro %}
-    <a href="/alertas" class="limpiar-filtros">✕ Limpiar filtros</a>
+    <a href="{{ '/noticias' if es_noticias else '/alertas' }}" class="limpiar-filtros">✕ Limpiar filtros</a>
     {% endif %}
   </div>
 
-  <!-- Leyenda de urgencia -->
+  <!-- Leyenda de urgencia (solo en alertas) -->
+  {% if not es_noticias %}
   <div class="leyenda">
     <span class="leyenda-item"><span class="borde-rojo"></span>Alta urgencia</span>
     <span class="leyenda-item"><span class="borde-naranja"></span>Urgencia media</span>
     <span class="leyenda-item"><span class="borde-verde"></span>Ambiental</span>
     <span class="leyenda-item"><span class="borde-azul"></span>Informativa</span>
   </div>
+  {% endif %}
 
   <!-- Lista de alertas -->
   {% if alertas %}
@@ -112,16 +131,15 @@
   </ul>
   {% else %}
   <div class="sin-alertas">
-    <div class="sin-alertas-icono">✅</div>
-    <p class="sin-alertas-titulo">Sin alertas activas</p>
+    <div class="sin-alertas-icono">{{ '🗞️' if es_noticias else '✅' }}</div>
+    <p class="sin-alertas-titulo">{{ 'Sin noticias recientes' if es_noticias else 'Sin alertas activas' }}</p>
     <p class="sin-alertas-desc">
-      No se encontraron alertas de movilidad o seguridad
+      No se encontraron {{ 'noticias de orden público' if es_noticias else 'alertas de movilidad o seguridad' }}
       {% if zona_filtro %}en la zona <strong>{{ zona_filtro }}</strong>{% endif %}
-      {% if cat_filtro %}de categoría <strong>{{ cat_filtro }}</strong>{% endif %}
-      en las últimas 48 horas.
+      en las últimas 48 horas / 30 días.
     </p>
     {% if zona_filtro or cat_filtro %}
-    <a href="/alertas" class="btn-ver-todo">Ver todas las alertas</a>
+    <a href="{{ '/noticias' if es_noticias else '/alertas' }}" class="btn-ver-todo">Ver todo</a>
     {% endif %}
   </div>
   {% endif %}

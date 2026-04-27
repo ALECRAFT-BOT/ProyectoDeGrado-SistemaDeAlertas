@@ -133,14 +133,35 @@ def index():
 
 @app.route("/alertas")
 def alertas():
-    """Página principal – RF04, RNF01, RNF02."""
+    """Página principal de Alertas Viales."""
+    return _render_seccion(es_noticias=False)
+
+
+@app.route("/noticias")
+def noticias():
+    """Página de Noticias del Catatumbo (Orden Público/Seguridad)."""
+    return _render_seccion(es_noticias=True)
+
+
+def _render_seccion(es_noticias=False):
+    """Lógica compartida para renderizar Alertas o Noticias."""
     zona_filtro = request.args.get("zona", "")
     cat_filtro  = request.args.get("categoria", "")
 
     data = _leer_json()
     lista = data.get("alertas", [])
 
-    # Filtrado por zona/categoría via query params
+    # Filtrado base por sección
+    if es_noticias:
+        # Pestaña Noticias: solo seguridad
+        lista = [a for a in lista if a.get("categoria") == "seguridad"]
+    else:
+        # Pestaña Alertas: todo excepto seguridad (movilidad, accidentes, ambiental)
+        # Nota: Si una noticia de seguridad mencionara movilidad, ya fue clasificada como movilidad
+        # por el orden de los diccionarios en filtro.py
+        lista = [a for a in lista if a.get("categoria") != "seguridad"]
+
+    # Filtrado adicional por zona/categoría via query params
     if zona_filtro:
         lista = [a for a in lista if zona_filtro.lower() in a.get("zona", "").lower()]
     if cat_filtro:
@@ -151,7 +172,6 @@ def alertas():
     ultima = data.get("ultima_actualizacion", "")
     try:
         dt = datetime.fromisoformat(ultima.replace("Z", "+00:00"))
-        # Convertir a hora local (Colombia UTC-5)
         dt_local = dt.astimezone(timezone(timedelta(hours=-5)))
         ultima_fmt = dt_local.strftime("%d/%m/%Y a las %I:%M %p (Hora Local)")
     except Exception:
@@ -175,6 +195,7 @@ def alertas():
         zonas=zonas_disponibles,
         categorias=list(ETIQUETAS_CATEGORIA.keys()),
         etiquetas=ETIQUETAS_CATEGORIA,
+        es_noticias=es_noticias
     )
 
 

@@ -159,6 +159,50 @@ ul { list-style: none; }
 }
 
 /* ════════════════════════════════════════
+   PESTAÑAS DE SECCIÓN
+   (Novedad: Separación Alertas / Noticias)
+═════════════════════════════════════════ */
+.pestanas {
+  display:       flex;
+  background:    var(--c-bg2);
+  border-bottom: 1px solid var(--c-border);
+}
+
+.pestanas-inner {
+  display:   flex;
+  width:     100%;
+  max-width: 800px;
+  margin:    0 auto;
+}
+
+.pestana-btn {
+  flex:           1;
+  text-align:     center;
+  padding:        12px 8px;
+  font-size:      14px;
+  font-weight:    700;
+  color:          var(--c-text-dim);
+  transition:     all .2s;
+  border-bottom:  3px solid transparent;
+  display:        flex;
+  align-items:    center;
+  justify-content: center;
+  gap:            6px;
+}
+
+.pestana-btn:hover {
+  background:      var(--c-bg3);
+  color:           var(--c-text-title);
+  text-decoration: none;
+}
+
+.pestana-btn.activo {
+  color:               var(--c-accent);
+  border-bottom-color: var(--c-accent);
+  background:          rgba(0, 180, 216, 0.08);
+}
+
+/* ════════════════════════════════════════
    BARRA DE FILTROS
 ═════════════════════════════════════════ */
 .filtros-bar {
