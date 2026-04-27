@@ -403,11 +403,12 @@ def filtrar_y_clasificar(items: list[dict]) -> list[dict]:
                 antiguedad = datetime.now(timezone.utc) - dt
                 
                 es_mantenimiento = re.search(r"\b(mantenimiento|pavimentaci[oó]n|obras?|arreglos?)\b", texto, re.IGNORECASE)
+                es_seguridad_critica = re.search(r"\b(ataque|atentado|drones|enfrentamiento|combate|desplazamiento)\b", texto, re.IGNORECASE)
                 
-                if es_mantenimiento and antiguedad > timedelta(days=30):
-                    continue  # Mantenimiento/obras caducan al mes
-                elif not es_mantenimiento and antiguedad > timedelta(days=7):
-                    continue  # Demás alertas caducan a los 7 días
+                if (es_mantenimiento or es_seguridad_critica) and antiguedad > timedelta(days=30):
+                    continue  # Mantenimiento y Seguridad Crítica caducan al mes
+                elif not (es_mantenimiento or es_seguridad_critica) and antiguedad > timedelta(days=7):
+                    continue  # Demás alertas (accidentes, etc.) caducan a los 7 días
             except Exception:
                 pass
 
