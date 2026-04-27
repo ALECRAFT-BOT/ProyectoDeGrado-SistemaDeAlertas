@@ -63,6 +63,7 @@ PALABRAS_CLAVE = {
         r"\bv[íi]a\s+cerrada\b", r"\bacceso\s+bloqueado\b",
         r"\bpaso\s+restringido\b", r"\bpaso\s+habilitado\b",
         r"\bsuspendi[dr]", r"\binternamiento\b",
+        r"\bmantenimiento\b", r"\bpavimentaci[oó]n\b", r"\bobras?\b", r"\barreglos?\b",
     ],
     "emergencia_ambiental": [
         r"\bderrumbe\b", r"\bderrumbes\b", r"\bdeslizamiento\b",
@@ -99,9 +100,7 @@ ZONAS = {
 
 # ─────────────────────────────────────────────
 # FUENTES OFICIALES (RF01)
-# Nota: Fuentes actualizadas basadas en accesibilidad. 
-# RSS-Bridge (https://rss-bridge.org/bridge01/) puede usarse para agregar fuentes de redes sociales.
-# Ver sección "FUENTES RSS-BRIDGE" al final para opciones comentadas.
+# Nota: Fuentes actualizadas basadas en accesibilidad.
 # ─────────────────────────────────────────────
 FUENTES = [
     {
@@ -125,14 +124,6 @@ FUENTES = [
         "url_alt": "https://news.google.com/",
         "icono":   "📰",
     },
-    # NOTA: datos.gov.co suele tener actualizaciones semanales/mensuales, no es ideal para tiempo real
-    # {
-    #     "nombre":  "datos.gov.co – Red Vial INVÍAS",
-    #     "tipo":    "api_json",
-    #     "url":     "https://www.datos.gov.co/resource/ie7y-asdn.json",
-    #     "url_alt": "https://www.datos.gov.co/Transporte/Red-Vial/ie7y-asdn",
-    #     "icono":   "📊",
-    # },
 ]
 # ─────────────────────────────────────────────
 # INICIALIZACIÓN DE BASE DE DATOS SQLITE (Capa 3)
