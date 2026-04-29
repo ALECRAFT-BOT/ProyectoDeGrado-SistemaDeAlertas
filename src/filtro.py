@@ -221,28 +221,36 @@ def extraer_feed_rss(fuente: dict) -> list[dict]:
 
 
 def extraer_invias_noticias(fuente: dict) -> list[dict]:
-    """Scraping quirúrgico para INVÍAS Noticias."""
+    """Scraping quirúrgico para INVÍAS Noticias, optimizado para evitar enlaces de menú."""
     items = []
     t0 = time.time()
     try:
         resp = hacer_peticion_con_reintentos(fuente["url"], intentos=3, timeout=30)
         soup = BeautifulSoup(resp.text, "html.parser")
         
-        for tag in soup.select("nav, script, style, footer, header"):
+        # Eliminar elementos irrelevantes para reducir ruido
+        for tag in soup.select("nav, script, style, footer, header, .cookies-policy, .menu-superior"):
             tag.decompose()
             
-        candidatos = soup.select("h2 a")
+        # Buscar enlaces que contengan '/publicaciones/' pero que no sean la página de noticias principal
+        # Esto es más robusto que h2 a si hay muchos menús
+        candidatos = soup.select("a[href*='/publicaciones/']")
         latencia = round(time.time() - t0, 3)
-        logger.info("[INVIAS] %s | latencia=%.3fs | candidatos=%d", fuente["nombre"], latencia, len(candidatos))
         
-        for tag in candidatos[:15]:
-            titulo = tag.get_text(" ", strip=True)[:200]
-            if len(titulo) < 10: continue
+        vistos = set()
+        for tag in candidatos:
+            url = tag.get("href", "")
+            # Evitar enlaces repetidos o a la propia sección de noticias
+            if not url or url in vistos or "/publicaciones/noticias/" in url:
+                continue
             
-            url = tag.get("href", fuente["url"])
+            titulo = tag.get_text(" ", strip=True)[:200]
+            if len(titulo) < 15: continue
+            
             if url.startswith("/"):
                 url = f"https://www.invias.gov.co{url}"
                 
+            vistos.add(url)
             uid = _sha1(titulo + url)
             items.append({
                 "id":          uid,
@@ -253,6 +261,10 @@ def extraer_invias_noticias(fuente: dict) -> list[dict]:
                 "fuente":      fuente["nombre"],
                 "icono":       fuente["icono"],
             })
+            
+            if len(items) >= 20: break # Suficientes noticias por ciclo
+            
+        logger.info("[INVIAS] %s | latencia=%.3fs | extraídos=%d", fuente["nombre"], latencia, len(items))
     except Exception as exc:
         latencia = round(time.time() - t0, 3)
         logger.error("[INVIAS-ERROR] %s | %.3fs | %s", fuente["nombre"], latencia, exc)
