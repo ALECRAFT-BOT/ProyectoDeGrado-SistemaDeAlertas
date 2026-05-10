@@ -386,8 +386,19 @@ def detectar_zona(texto: str) -> str | None:
     return None
 
 
+# Departamentos claramente fuera de la región objetivo — para rechazo rápido
+DEPARTAMENTOS_EXCLUIDOS = re.compile(
+    r"\b(boyac[aá]|meta|cundinamarca|nari[ñn]o|cauca|valle|tolima|"
+    r"huila|c[oó]rdoba|bol[íi]var|magdalena|atl[aá]ntico|sucre|"
+    r"cesar|guajira|choc[oó]|antioquia|risaralda|caldas|quind[íi]o|"
+    r"casanare|arauca|vichada|guain[íi]a|vaup[eé]s|amazonas|putumayo|"
+    r"san andr[eé]s|bogot[aá])\b",
+    re.IGNORECASE,
+)
+
+
 def filtrar_y_clasificar(items: list[dict]) -> list[dict]:
-    """Pipeline de filtrado: deduplicación + regex + clasificación."""
+    """Pipeline de filtrado: deduplicación + regex + clasificación geográfica."""
     vistos  = set()
     alertas = []
     total   = len(items)
@@ -398,7 +409,17 @@ def filtrar_y_clasificar(items: list[dict]) -> list[dict]:
             continue
         vistos.add(item["id"])
 
-        texto     = _texto_completo(item)
+        texto = _texto_completo(item)
+
+        # Rechazo rápido: si el texto menciona explícitamente otro departamento
+        # y NO menciona ninguna palabra clave geográfica de la región,
+        # descartarlo para evitar falsos positivos de noticias nacionales.
+        if DEPARTAMENTOS_EXCLUIDOS.search(texto):
+            zona_local = detectar_zona(texto)
+            if zona_local is None:
+                logger.debug("[EXCLUIDO-DPTO] %s", item.get("titulo", "")[:80])
+                continue  # Otro departamento sin referencia a la región
+
         categoria = detectar_categoria(texto)
         if categoria is None:
             continue  # No es alerta relevante
@@ -413,10 +434,16 @@ def filtrar_y_clasificar(items: list[dict]) -> list[dict]:
             try:
                 dt = datetime.fromisoformat(fecha_str.replace("Z", "+00:00"))
                 antiguedad = datetime.now(timezone.utc) - dt
-                
-                es_mantenimiento = re.search(r"\b(mantenimiento|pavimentaci[oó]n|obras?|arreglos?)\b", texto, re.IGNORECASE)
-                es_seguridad_critica = re.search(r"\b(ataque|atentado|drones|enfrentamiento|combate|desplazamiento)\b", texto, re.IGNORECASE)
-                
+
+                es_mantenimiento = re.search(
+                    r"\b(mantenimiento|pavimentaci[oó]n|obras?|arreglos?)\b",
+                    texto, re.IGNORECASE
+                )
+                es_seguridad_critica = re.search(
+                    r"\b(ataque|atentado|drones|enfrentamiento|combate|desplazamiento)\b",
+                    texto, re.IGNORECASE
+                )
+
                 if (es_mantenimiento or es_seguridad_critica) and antiguedad > timedelta(days=30):
                     continue  # Mantenimiento y Seguridad Crítica caducan al mes
                 elif not (es_mantenimiento or es_seguridad_critica) and antiguedad > timedelta(days=7):
@@ -428,6 +455,8 @@ def filtrar_y_clasificar(items: list[dict]) -> list[dict]:
         item["zona"]      = zona
         item["fecha_cap"] = datetime.now(timezone.utc).isoformat()
         alertas.append(item)
+        logger.info("[ACEPTADO] cat=%s zona=%s | %s",
+                    categoria, zona, item.get("titulo", "")[:80])
 
     filtradas = len(alertas)
     precision = round(filtradas / total * 100, 1) if total else 0
@@ -439,24 +468,44 @@ def filtrar_y_clasificar(items: list[dict]) -> list[dict]:
 # PERSISTENCIA (Capa 3)
 # ─────────────────────────────────────────────
 def guardar_json(alertas: list[dict]) -> None:
-    """Guarda las alertas de las últimas 48 h en JSON activo (baja latencia)."""
-    limite = datetime.now(timezone.utc) - timedelta(hours=48)
+    """Guarda las alertas recientes en JSON activo (baja latencia).
+    
+    - Mantenimiento / seguridad crítica: hasta 30 días.
+    - Resto (movilidad, accidentes, ambiental): hasta 48 horas.
+    """
+    ahora  = datetime.now(timezone.utc)
+    limite_corto = ahora - timedelta(hours=48)   # Para alertas normales
+    limite_largo = ahora - timedelta(days=30)    # Para mantenimiento/seguridad crítica
+
     recientes = []
     for a in alertas:
         try:
-            # Intenta parsear fecha de publicación
             fp_str = a.get("fecha_pub", "")
-            # feedparser devuelve structs; aquí ya son strings ISO
-            recientes.append(a)
+            if not fp_str:
+                recientes.append(a)
+                continue
+            dt = datetime.fromisoformat(fp_str.replace("Z", "+00:00"))
+            texto = (a.get("titulo", "") + " " + a.get("descripcion", "")).lower()
+            es_larga_duracion = re.search(
+                r"\b(mantenimiento|pavimentaci[oó]n|obras?|arreglos?|"
+                r"ataque|atentado|drones|enfrentamiento|combate|desplazamiento)\b",
+                texto, re.IGNORECASE
+            )
+            if es_larga_duracion:
+                if dt >= limite_largo:
+                    recientes.append(a)  # Hasta 30 días
+            else:
+                if dt >= limite_corto:
+                    recientes.append(a)  # Hasta 48 horas
         except Exception:
-            recientes.append(a)
+            recientes.append(a)  # Si hay error de parseo, incluir igual
 
     # Mantener máximo las 200 alertas más recientes
     recientes = recientes[:200]
 
     with open(JSON_PATH, "w", encoding="utf-8") as f:
         json.dump({
-            "ultima_actualizacion": datetime.now(timezone.utc).isoformat(),
+            "ultima_actualizacion": ahora.isoformat(),
             "total": len(recientes),
             "alertas": recientes,
         }, f, ensure_ascii=False, indent=2)
@@ -612,8 +661,10 @@ def ciclo_extraccion() -> None:
         guardar_db(conn, alertas)
     else:
         logger.warning("Ninguna alerta filtrada en este ciclo.")
-        if not JSON_PATH.exists():
-            guardar_json([]) # Crear archivo vacío inicial
+        # IMPORTANTE: Siempre actualizar el timestamp para que la UI
+        # muestre la hora real de la última revisión del sistema,
+        # incluso si no hay alertas nuevas.
+        guardar_json([])  # Actualiza ultima_actualizacion aunque esté vacío
 
     conn.close()
     logger.info("FIN CICLO – %s", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
